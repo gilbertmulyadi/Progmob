@@ -29,7 +29,7 @@ class HomePage extends StatelessWidget {
             CircleAvatar(
               radius: 100,
               backgroundImage: AssetImage(
-                'lib/images/gambar.png',
+                'images/gambar.png',
               ),
             ),
             SizedBox(height: 20),
