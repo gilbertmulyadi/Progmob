@@ -9,9 +9,7 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'HomePage',
-          style: TextStyle(
-            color: Colors.white, fontFamily: 'Poppins'
-          ),
+          style: TextStyle(color: Colors.white, fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.blue[900],
       ),

@@ -1,10 +1,76 @@
 import 'package:flutter/material.dart';
-import 'package:progmob_flutter/pages/register.dart';
-import 'package:progmob_flutter/pages/homepage.dart';
+import 'package:dio/dio.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:flutter/gestures.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _storage = GetStorage();
+  final _dio = Dio();
+  final _apiUrl = 'https://mobileapis.manpits.xyz/api';
+
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  bool _isPasswordVisible = false;
+  bool _isEmailValid = false;
+  bool _isPasswordValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void goLogin() async {
+    if (!_emailController.text.contains("@gmail.com") ||
+        _emailController.text.isEmpty && _passwordController.text.isEmpty) {
+      setState(() {
+        _isEmailValid = true;
+        _isPasswordValid = true;
+      });
+    } else {
+      try {
+        final _response = await _dio.post(
+          '${_apiUrl}/login',
+          data: {
+            'email': _emailController.text,
+            'password': _passwordController.text
+          },
+        );
+        print(_response.data);
+        _storage.write('token', _response.data['data']['token']);
+        final _userInfo = await _dio.get(
+          '${_apiUrl}/user',
+          options: Options(
+            headers: {'Authorization': 'Bearer ${_storage.read('token')}'},
+          ),
+        );
+        print(_response.data);
+        _storage.write('id', _userInfo.data['data']['user']['id']);
+        _storage.write('email', _userInfo.data['data']['user']['email']);
+        _storage.write('name', _userInfo.data['data']['user']['name']);
+        print(_storage.read('id'));
+        print(_storage.read('email'));
+        print(_storage.read('name'));
+        Navigator.pushReplacementNamed(context, '/homepage');
+      } on DioException catch (e) {
+        print('${e.response} - ${e.response?.statusCode}');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,30 +111,32 @@ class LoginPage extends StatelessWidget {
                           fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 50.0),
-                    const TextField(
+                    TextField(
+                      controller: _emailController,
+                      // ignore: prefer_const_constructors
                       decoration: InputDecoration(
-                        hintText: 'Username/Email',
-                        labelText: 'Username/Email',
-                        border: OutlineInputBorder(),
+                        hintText: 'Email',
+                        labelText: 'Email',
+                        border: const OutlineInputBorder(),
+                        errorText: _isEmailValid ? 'Enter a valid email' : null,
                       ),
                     ),
                     const SizedBox(height: 15.0),
-                    const TextField(
-                      obscureText: true,
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      // ignore: prefer_const_constructors
                       decoration: InputDecoration(
                         hintText: 'Password',
                         labelText: 'Password',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        errorText: _isPasswordValid ? 'Enter a password' : null,
                       ),
                     ),
                     const SizedBox(height: 20.0),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const HomePage()),
-                        );
+                        goLogin();
                       },
                       child: const Text('Login',
                           style: TextStyle(fontFamily: 'Poppins')),
@@ -88,12 +156,7 @@ class LoginPage extends StatelessWidget {
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const RegisterPage()),
-                                );
+                                Navigator.pushNamed(context, '/register');
                               },
                           ),
                         ],
