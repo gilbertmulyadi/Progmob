@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:progmob_flutter/anggota/addAnggotaDialog.dart';
 import 'package:progmob_flutter/anggota/editAnggotaDialog.dart';
+import 'package:progmob_flutter/anggota/detailAnggotaDialog.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
@@ -114,6 +115,15 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+  void _showDetailDialog(Map<String, dynamic> anggota) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DetailAnggotaDialog(anggota: anggota);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,7 +132,7 @@ class _HomeContentState extends State<HomeContent> {
         children: [
           SizedBox(height: 20),
           const Text(
-            'Homepage',
+            'Anggota',
             style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 20.0,
@@ -137,6 +147,9 @@ class _HomeContentState extends State<HomeContent> {
                 return ListTile(
                   title: Text(anggota['nama']),
                   subtitle: Text(anggota['alamat']),
+                  onTap: () {
+                    _showDetailDialog(anggota);
+                  },
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

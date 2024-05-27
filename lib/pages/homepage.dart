@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:progmob_flutter/pages/userpage.dart';
 import 'package:progmob_flutter/pages/homecontent.dart';
+import 'package:progmob_flutter/pages/transaksi.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +15,7 @@ class _HomePageState extends State<HomePage> {
 
   static const List<Widget> _widgetOptions = <Widget>[
     HomeContent(),
+    TransaksiPage(),
     UserPage(),
   ];
 
@@ -42,6 +44,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.swap_horiz),
+            label: 'Transaksi',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
