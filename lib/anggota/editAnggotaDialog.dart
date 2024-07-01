@@ -17,20 +17,22 @@ class _EditAnggotaDialogState extends State<EditAnggotaDialog> {
   final _dio = Dio();
   final _apiUrl = 'https://mobileapis.manpits.xyz/api/anggota';
 
-  TextEditingController _nomerIndukController = TextEditingController();
-  TextEditingController _teleponController = TextEditingController();
-  TextEditingController _namaController = TextEditingController();
-  TextEditingController _alamatController = TextEditingController();
-  TextEditingController _tglLahirController = TextEditingController();
+  late TextEditingController _nomerIndukController;
+  late TextEditingController _teleponController;
+  late TextEditingController _namaController;
+  late TextEditingController _alamatController;
+  late TextEditingController _tglLahirController;
 
   @override
   void initState() {
     super.initState();
-    _nomerIndukController.text = widget.anggota['nomor_induk'].toString();
-    _teleponController.text = widget.anggota['telepon'];
-    _namaController.text = widget.anggota['nama'];
-    _alamatController.text = widget.anggota['alamat'];
-    _tglLahirController.text = widget.anggota['tgl_lahir'];
+    _nomerIndukController =
+        TextEditingController(text: widget.anggota['nomor_induk'].toString());
+    _teleponController = TextEditingController(text: widget.anggota['telepon']);
+    _namaController = TextEditingController(text: widget.anggota['nama']);
+    _alamatController = TextEditingController(text: widget.anggota['alamat']);
+    _tglLahirController =
+        TextEditingController(text: widget.anggota['tgl_lahir']);
   }
 
   @override
@@ -43,62 +45,7 @@ class _EditAnggotaDialogState extends State<EditAnggotaDialog> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Edit Anggota'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _nomerIndukController,
-              decoration: InputDecoration(labelText: 'Nomer Induk'),
-            ),
-            TextField(
-              controller: _teleponController,
-              decoration: InputDecoration(labelText: 'Telepon'),
-            ),
-            TextField(
-              controller: _namaController,
-              decoration: InputDecoration(labelText: 'Nama'),
-            ),
-            TextField(
-              controller: _alamatController,
-              decoration: InputDecoration(labelText: 'Alamat'),
-            ),
-            TextField(
-              controller: _tglLahirController,
-              decoration: InputDecoration(labelText: 'Tanggal Lahir'),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Batal'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            editAnggota(
-              widget.anggota['id'],
-              _nomerIndukController.text,
-              _teleponController.text,
-              _namaController.text,
-              _alamatController.text,
-              _tglLahirController.text,
-            );
-          },
-          child: Text('Simpan Perubahan'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> editAnggota(
+  Future<void> _editAnggota(
     int id,
     String nomerInduk,
     String telepon,
@@ -137,5 +84,87 @@ class _EditAnggotaDialogState extends State<EditAnggotaDialog> {
       );
       print('${e.response} - ${e.response?.statusCode}');
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Edit Anggota',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue[900],
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              _editAnggota(
+                widget.anggota['id'],
+                _nomerIndukController.text,
+                _teleponController.text,
+                _namaController.text,
+                _alamatController.text,
+                _tglLahirController.text,
+              );
+            },
+            child: Text(
+              'Save',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              SizedBox(height: 16.0),
+              TextField(
+                readOnly: true,
+                controller: _nomerIndukController,
+                decoration: InputDecoration(
+                  labelText: 'Nomor Induk',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _namaController,
+                decoration: InputDecoration(
+                  labelText: 'Nama',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _alamatController,
+                decoration: InputDecoration(
+                  labelText: 'Alamat',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _teleponController,
+                decoration: InputDecoration(
+                  labelText: 'Nomor Telepon',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _tglLahirController,
+                decoration: InputDecoration(
+                  labelText: 'Tanggal Lahir',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:progmob_flutter/pages/bunga.dart';
 import 'package:progmob_flutter/pages/login.dart';
 import 'package:progmob_flutter/pages/register.dart';
 import 'package:progmob_flutter/pages/homepage.dart';
 import 'package:progmob_flutter/pages/userpage.dart';
+import 'package:progmob_flutter/pages/tabungan.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 
@@ -23,6 +25,8 @@ class MyApp extends StatelessWidget {
         '/register': (context) => RegisterPage(),
         '/homepage': (context) => HomePage(),
         '/userpage': (context) => UserPage(),
+        '/tabungan': (context) => TabunganPage(),
+        '/bunga': (context) => Bunga(),
       },
       debugShowCheckedModeBanner: false,
       title: 'Progmob',

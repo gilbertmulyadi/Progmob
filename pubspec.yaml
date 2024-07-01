@@ -39,6 +39,8 @@ dependencies:
   get_storage: ^2.1.1
   flutter_svg: ^1.0.0 
   get: ^4.6.1
+  font_awesome_flutter: ">= 4.7.0"
+  uuid: ^3.0.4
 
 dev_dependencies:
   flutter_test:

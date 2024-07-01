@@ -106,6 +106,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () {
+                          Navigator.pop(context); // Navigate back to login page
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 5.0),
                     const Text(
                       'Register',
                       style: TextStyle(

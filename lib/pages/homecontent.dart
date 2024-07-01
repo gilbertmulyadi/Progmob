@@ -4,6 +4,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:progmob_flutter/anggota/addAnggotaDialog.dart';
 import 'package:progmob_flutter/anggota/editAnggotaDialog.dart';
 import 'package:progmob_flutter/anggota/detailAnggotaDialog.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
@@ -15,7 +16,8 @@ class HomeContent extends StatefulWidget {
 class _HomeContentState extends State<HomeContent> {
   final _storage = GetStorage();
   final _dio = Dio();
-  final _apiUrl = 'https://mobileapis.manpits.xyz/api/anggota';
+  final _apiUrlAnggota = 'https://mobileapis.manpits.xyz/api/anggota';
+  final _apiUrlSaldo = 'https://mobileapis.manpits.xyz/api/saldo';
 
   List<dynamic> anggotaList = [];
 
@@ -34,19 +36,14 @@ class _HomeContentState extends State<HomeContent> {
       }
 
       final response = await _dio.get(
-        _apiUrl,
+        _apiUrlAnggota,
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
 
-      print(
-          'Response data: ${response.data}'); // Debugging: Print the response data
-
-      setState(() {
-        anggotaList = response.data['data']['anggotas'] ??
-            []; // Correctly access the nested list
-      });
+      final anggotas = response.data['data']['anggotas'] ?? [];
+      await fetchSaldoAnggota(anggotas);
     } on DioError catch (e) {
       print(
           'Failed to fetch anggota: ${e.response?.statusCode} ${e.response?.data}');
@@ -60,7 +57,43 @@ class _HomeContentState extends State<HomeContent> {
     }
   }
 
+  Future<void> fetchSaldoAnggota(List<dynamic> anggotas) async {
+    try {
+      final token = _storage.read('token');
+      if (token == null) {
+        print('Authorization token not found');
+        return;
+      }
+
+      for (var anggota in anggotas) {
+        final response = await _dio.get(
+          '$_apiUrlSaldo/${anggota['id']}',
+          options: Options(
+            headers: {'Authorization': 'Bearer $token'},
+          ),
+        );
+
+        anggota['saldo'] = response.data['data']['saldo'] ?? 0;
+      }
+
+      setState(() {
+        anggotaList = anggotas;
+      });
+    } on DioError catch (e) {
+      print(
+          'Failed to fetch saldo: ${e.response?.statusCode} ${e.response?.data}');
+      if (e.response != null) {
+        print('Error data: ${e.response?.data}');
+      } else {
+        print('Error message: ${e.message}');
+      }
+    } catch (e) {
+      print('Unexpected error: $e');
+    }
+  }
+
   void deleteAnggota(BuildContext context, int id) async {
+    if (!mounted) return; // Check if the widget is still mounted
     try {
       final token = _storage.read('token');
       if (token == null) {
@@ -69,26 +102,57 @@ class _HomeContentState extends State<HomeContent> {
       }
 
       await _dio.delete(
-        '$_apiUrl/$id',
+        '$_apiUrlAnggota/$id',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
+
+      if (!mounted) return; // Re-check if the widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Anggota berhasil dihapus'),
         ),
       );
-      // Refresh the list after delete
-      fetchAnggota();
+
+      await fetchAnggota(); // Refresh the list after delete
+      setState(() {});
     } catch (e) {
       print(e);
+      if (!mounted) return; // Re-check if the widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal menghapus anggota'),
         ),
       );
     }
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Konfirmasi Hapus"),
+          content: Text("Apakah Anda yakin ingin menghapus anggota ini?"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Tidak"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text("Ya"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                deleteAnggota(context, id); // Call delete method
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showAddEditDialog({Map<String, String>? anggota}) {
@@ -146,13 +210,25 @@ class _HomeContentState extends State<HomeContent> {
                 final anggota = anggotaList[index];
                 return ListTile(
                   title: Text(anggota['nama']),
-                  subtitle: Text(anggota['alamat']),
+                  subtitle: Text('Saldo: Rp.${anggota['saldo']}'),
                   onTap: () {
                     _showDetailDialog(anggota);
                   },
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      IconButton(
+                        icon: FaIcon(
+                          FontAwesomeIcons.wallet,
+                        ),
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/tabungan',
+                            arguments: anggota,
+                          );
+                        },
+                      ),
                       IconButton(
                         icon: Icon(Icons.edit),
                         onPressed: () {
@@ -162,7 +238,7 @@ class _HomeContentState extends State<HomeContent> {
                       IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {
-                          deleteAnggota(context, anggota['id']);
+                          _showDeleteConfirmationDialog(context, anggota['id']);
                         },
                       ),
                     ],

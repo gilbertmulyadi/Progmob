@@ -26,6 +26,33 @@ class UserPage extends StatelessWidget {
     }
   }
 
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Konfirmasi Logout'),
+          content: const Text('Apakah Anda yakin ingin logout?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Tidak'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Ya'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _logout();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final _storage = GetStorage();
@@ -39,7 +66,7 @@ class UserPage extends StatelessWidget {
           const CircleAvatar(
             radius: 50,
             backgroundImage: AssetImage(
-                'images/gambar.png'), // replace with the actual profile picture asset
+                'images/gambar.png'),
           ),
           const SizedBox(height: 20),
           Text(
@@ -53,7 +80,7 @@ class UserPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: _logout,
+            onPressed: () => _showLogoutDialog(context),
             child: const Text('Logout'),
           ),
         ],

@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
 
 class AddAnggotaDialog extends StatefulWidget {
-  final Map<String, String>? anggota;
+  final Map<String, dynamic>? anggota;
   final Function() onAnggotaAdded;
 
   const AddAnggotaDialog({this.anggota, required this.onAnggotaAdded, Key? key})
@@ -18,7 +18,6 @@ class _AddAnggotaDialogState extends State<AddAnggotaDialog> {
   final _dio = Dio();
   final _apiUrl = 'https://mobileapis.manpits.xyz/api/anggota';
 
-  late TextEditingController _nomorIndukController;
   late TextEditingController _namaController;
   late TextEditingController _alamatController;
   late TextEditingController _tglLahirController;
@@ -27,8 +26,6 @@ class _AddAnggotaDialogState extends State<AddAnggotaDialog> {
   @override
   void initState() {
     super.initState();
-    _nomorIndukController =
-        TextEditingController(text: widget.anggota?['nomor_induk'] ?? '');
     _namaController =
         TextEditingController(text: widget.anggota?['nama'] ?? '');
     _alamatController =
@@ -41,7 +38,6 @@ class _AddAnggotaDialogState extends State<AddAnggotaDialog> {
 
   @override
   void dispose() {
-    _nomorIndukController.dispose();
     _namaController.dispose();
     _alamatController.dispose();
     _tglLahirController.dispose();
@@ -49,7 +45,14 @@ class _AddAnggotaDialogState extends State<AddAnggotaDialog> {
     super.dispose();
   }
 
-  Future<void> _addAnggota(Map<String, String> anggota) async {
+  String _generateNomorInduk() {
+    return DateTime.now()
+        .millisecondsSinceEpoch
+        .toString()
+        .substring(0, 10); // 10-digit timestamp
+  }
+
+  Future<void> _addAnggota(Map<String, dynamic> anggota) async {
     try {
       final token = _storage.read('token');
       if (token == null) {
@@ -72,9 +75,19 @@ class _AddAnggotaDialogState extends State<AddAnggotaDialog> {
     }
   }
 
-  Future<void> _editAnggota(String id, Map<String, String> anggota) async {
+  Future<void> _editAnggota(String id, Map<String, dynamic> anggota) async {
     try {
-      await _dio.put('$_apiUrl/$id', data: anggota);
+      final token = _storage.read('token');
+      if (token == null) {
+        print('Authorization token not found');
+        return;
+      }
+
+      await _dio.put('$_apiUrl/$id',
+          data: anggota,
+          options: Options(
+            headers: {'Authorization': 'Bearer $token'},
+          ));
       widget.onAnggotaAdded();
       Navigator.of(context).pop();
     } on DioError catch (e) {
@@ -83,61 +96,96 @@ class _AddAnggotaDialogState extends State<AddAnggotaDialog> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        _tglLahirController.text = "${picked.toLocal()}".split(' ')[0];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.anggota == null ? 'Add Anggota' : 'Edit Anggota'),
-      content: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            TextField(
-              controller: _nomorIndukController,
-              decoration: InputDecoration(labelText: 'Nomor Induk'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.anggota == null ? 'Add Anggota' : 'Edit Anggota',
+          style: TextStyle(color: Colors.white, fontFamily: 'Poppins'),
+        ),
+        backgroundColor: Colors.blue[900],
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              final newAnggota = {
+                'nomor_induk': _generateNomorInduk(),
+                'nama': _namaController.text,
+                'alamat': _alamatController.text,
+                'tgl_lahir': _tglLahirController.text,
+                'telepon': _teleponController.text,
+              };
+              if (widget.anggota == null) {
+                _addAnggota(newAnggota);
+              } else {
+                _editAnggota(widget.anggota!['id'].toString(), newAnggota);
+              }
+            },
+            child: Text(
+              widget.anggota == null ? 'Add' : 'Save',
+              style: TextStyle(color: Colors.white),
             ),
-            TextField(
-              controller: _namaController,
-              decoration: InputDecoration(labelText: 'Nama'),
-            ),
-            TextField(
-              controller: _alamatController,
-              decoration: InputDecoration(labelText: 'Alamat'),
-            ),
-            TextField(
-              controller: _tglLahirController,
-              decoration: InputDecoration(labelText: 'Tanggal Lahir'),
-            ),
-            TextField(
-              controller: _teleponController,
-              decoration: InputDecoration(labelText: 'Telepon'),
-            ),
-          ],
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              TextField(
+                controller: _namaController,
+                decoration: InputDecoration(
+                  labelText: 'Nama',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _alamatController,
+                decoration: InputDecoration(
+                  labelText: 'Alamat',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _tglLahirController,
+                readOnly: true,
+                onTap: () => _selectDate(context),
+                decoration: InputDecoration(
+                  labelText: 'Tanggal Lahir',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextField(
+                controller: _teleponController,
+                decoration: InputDecoration(
+                  labelText: 'Telepon',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () {
-            final newAnggota = {
-              'nomor_induk': _nomorIndukController.text,
-              'nama': _namaController.text,
-              'alamat': _alamatController.text,
-              'tgl_lahir': _tglLahirController.text,
-              'telepon': _teleponController.text,
-            };
-            if (widget.anggota == null) {
-              _addAnggota(newAnggota);
-            } else {
-              _editAnggota(widget.anggota!['id']!, newAnggota);
-            }
-          },
-          child: Text(widget.anggota == null ? 'Add' : 'Save'),
-        ),
-      ],
     );
   }
 }

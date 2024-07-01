@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:progmob_flutter/pages/userpage.dart';
 import 'package:progmob_flutter/pages/homecontent.dart';
 import 'package:progmob_flutter/pages/transaksi.dart';
+import 'package:progmob_flutter/pages/bunga.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -13,9 +15,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[
+  static final List<Widget> _widgetOptions = <Widget>[
     HomeContent(),
     TransaksiPage(),
+    Bunga(),
     UserPage(),
   ];
 
@@ -40,6 +43,7 @@ class _HomePageState extends State<HomePage> {
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -48,6 +52,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.swap_horiz),
             label: 'Transaksi',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.coins),
+            label: 'Bunga',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

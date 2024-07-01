@@ -21,7 +21,6 @@ class _AddTransaksiDialogState extends State<AddTransaksiDialog> {
 
   List<dynamic> anggotaList = [];
   List<dynamic> jenisTransaksiList = [];
-
   String? selectedAnggota;
   String? selectedJenisTransaksi;
   final TextEditingController _saldoController = TextEditingController();
@@ -48,22 +47,12 @@ class _AddTransaksiDialogState extends State<AddTransaksiDialog> {
         ),
       );
 
-      print(
-          'Response data: ${response.data}'); // Debugging: Print the response data
-
       setState(() {
         anggotaList = response.data['data']['anggotas'] ?? [];
       });
     } on DioError catch (e) {
       print(
           'Failed to fetch anggota: ${e.response?.statusCode} ${e.response?.data}');
-      if (e.response != null) {
-        print('Error data: ${e.response?.data}');
-      } else {
-        print('Error message: ${e.message}');
-      }
-    } catch (e) {
-      print('Unexpected error: $e');
     }
   }
 
@@ -82,22 +71,12 @@ class _AddTransaksiDialogState extends State<AddTransaksiDialog> {
         ),
       );
 
-      print(
-          'Response data: ${response.data}'); // Debugging: Print the response data
-
       setState(() {
         jenisTransaksiList = response.data['data']['jenistransaksi'] ?? [];
       });
     } on DioError catch (e) {
       print(
           'Failed to fetch jenis transaksi: ${e.response?.statusCode} ${e.response?.data}');
-      if (e.response != null) {
-        print('Error data: ${e.response?.data}');
-      } else {
-        print('Error message: ${e.message}');
-      }
-    } catch (e) {
-      print('Unexpected error: $e');
     }
   }
 
@@ -114,10 +93,9 @@ class _AddTransaksiDialogState extends State<AddTransaksiDialog> {
         'trx_id': selectedJenisTransaksi,
         'trx_nominal': _saldoController.text,
       };
-      print(newTransaksi);
 
       await _dio.post(
-        'https://mobileapis.manpits.xyz/api/tabungan', // Ubah endpoint untuk menambahkan transaksi
+        'https://mobileapis.manpits.xyz/api/tabungan',
         data: newTransaksi,
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
@@ -134,61 +112,69 @@ class _AddTransaksiDialogState extends State<AddTransaksiDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Transaksi'),
-      content: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            DropdownButtonFormField<String>(
-              value: selectedAnggota,
-              hint: Text('Pilih Anggota'),
-              items: anggotaList.map<DropdownMenuItem<String>>((anggota) {
-                return DropdownMenuItem<String>(
-                  value: anggota['id'].toString(),
-                  child: Text(anggota['nama']),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedAnggota = value;
-                });
-              },
-            ),
-            DropdownButtonFormField<String>(
-              value: selectedJenisTransaksi,
-              hint: Text('Pilih Jenis Transaksi'),
-              items: jenisTransaksiList.map<DropdownMenuItem<String>>((jenis) {
-                return DropdownMenuItem<String>(
-                  value: jenis['id'].toString(),
-                  child: Text(jenis['trx_name']),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedJenisTransaksi = value;
-                });
-              },
-            ),
-            TextField(
-              controller: _saldoController,
-              decoration: InputDecoration(labelText: 'Isi Saldo'),
-              keyboardType: TextInputType.number,
-            ),
-          ],
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              Text(
+                'Add Transaksi',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedAnggota,
+                hint: Text('Pilih Anggota'),
+                decoration: InputDecoration(border: OutlineInputBorder()),
+                items: anggotaList.map<DropdownMenuItem<String>>((anggota) {
+                  return DropdownMenuItem<String>(
+                    value: anggota['id'].toString(),
+                    child: Text(anggota['nama']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedAnggota = value;
+                  });
+                },
+              ),
+              SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedJenisTransaksi,
+                hint: Text('Pilih Jenis Transaksi'),
+                decoration: InputDecoration(border: OutlineInputBorder()),
+                items:
+                    jenisTransaksiList.map<DropdownMenuItem<String>>((jenis) {
+                  return DropdownMenuItem<String>(
+                    value: jenis['id'].toString(),
+                    child: Text(jenis['trx_name']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedJenisTransaksi = value;
+                  });
+                },
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _saldoController,
+                decoration: InputDecoration(
+                  labelText: 'Isi Saldo',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _addTransaksi,
+                child: Text('Save'),
+              ),
+            ],
+          ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: _addTransaksi,
-          child: Text('Save'),
-        ),
-      ],
     );
   }
 }
